@@ -91,8 +91,40 @@ io.on('connection', (socket) => {
         }
     })
 
+    socket.on('onUserSelected', (userq) => {
+        const admin = users.find((x) => x.isAdmin && x.online)
+        if (admin) {
+            const existUser = users.find((x) => x._id === user._id)
+            io.to(admin.socketId).emit('selectUser', existUser)
+        }
+    })
 
+    socket.on('onMessage', (message) => {
+        if (message.isAdmin) {
+            const user = users.find((x) => x._id === message._id && x.online)
+            if (user) {
+                io.to(user.socketId).emit('message', message)
+                user.messages.push(message)
+            }
+        } else {
+            const admin = users.find((x) => x.isAdmin && x.online)
+            if (admin) {
+                io.to(admin.socketId).emit('message', message)
+                const user = users.find((x) => x._id === message._id && x.online)
+                user.messages.push(message)
+            } else {
+                io.to(socket.id).emit('message', {
+                    name: "Admin",
+                    body: "Sorry, I am not online right now."
+                })
+            }
+        }
+    })
 })
 
-// const port = process.env.PORT || 5000;
+const port = process.env.PORT || 5000;
+httpServer.listen(port, () => {
+    console.log(`Server is running on localhost:${port}`)
+})
+
 // app.listen(port, () => console.log(`Server is running on localhost:${port}`))
