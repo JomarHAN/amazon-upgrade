@@ -8,6 +8,8 @@ import productRouter from './routers/productRouters.js'
 import path from 'path'
 import uploadRouter from './routers/uploadRouter.js'
 import draftRouter from './routers/draftRouter.js'
+import { Server } from 'socket.io'
+import http from 'http'
 
 const app = express()
 app.use(express.json())
@@ -48,5 +50,49 @@ app.use((err, req, res, next) => {
     res.status(500).send({ message: err.message })
 })
 
-const port = process.env.PORT || 5000;
-app.listen(port, () => console.log(`Server is running on localhost:${port}`))
+const httpServer = http.Server(app)
+const io = new Server(httpServer)
+const users = []
+
+io.on('connection', (socket) => {
+    socket.on('disconnect', () => {
+        const user = users.find(x => x.socketId === socket.id)
+        if (user) {
+            user.online = false;
+            console.log('Offline', user.name)
+            const admin = users.find(x => x.isAdmin && x.online)
+            if (admin) {
+                io.to(admin.socketId).emit('updateUser', user)
+            }
+        }
+    })
+
+    socket.on('onLogin', (user) => {
+        const updateUser = {
+            ...user,
+            online: true,
+            socketId: socket.id,
+            messages: []
+        }
+        const existUser = users.find(x => x._id === updateUser._id)
+        if (existUser) {
+            existUser.socketId = socket.id;
+            existUser.online = true
+        } else {
+            users.push(updateUser)
+        }
+        console.log('Online', user.name)
+        const admin = users.find(x => x.isAdmin && x.online)
+        if (admin) {
+            io.to(admin.socketId).emit('updateUser', updateUser)
+        }
+        if (updateUser.isAdmin) {
+            io.to(updateUser.socketId).emit('listUsers', users)
+        }
+    })
+})
+
+
+
+// const port = process.env.PORT || 5000;
+// app.listen(port, () => console.log(`Server is running on localhost:${port}`))
