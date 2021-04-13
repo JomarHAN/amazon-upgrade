@@ -79,7 +79,7 @@ io.on('connection', (socket) => {
             existUser.socketId = socket.id;
             existUser.online = true;
         } else {
-            user.push(updateUser)
+            users.push(updateUser)
         }
         console.log('Online', user.name);
         const admin = users.find((x) => x.isAdmin && x.online)
@@ -91,7 +91,7 @@ io.on('connection', (socket) => {
         }
     })
 
-    socket.on('onUserSelected', (userq) => {
+    socket.on('onUserSelected', (user) => {
         const admin = users.find((x) => x.isAdmin && x.online)
         if (admin) {
             const existUser = users.find((x) => x._id === user._id)
