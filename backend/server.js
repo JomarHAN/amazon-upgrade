@@ -9,7 +9,7 @@ import path from 'path'
 import uploadRouter from './routers/uploadRouter.js'
 import draftRouter from './routers/draftRouter.js'
 import http from 'http'
-import SocketIO from 'socket.io'
+import { Server } from 'socket.io'
 
 const app = express()
 app.use(express.json())
@@ -51,7 +51,7 @@ app.use((err, req, res, next) => {
 })
 
 const httpServer = http.Server(app)
-const io = SocketIO(httpServer)
+const io = new Server(httpServer, { cors: { origin: '*' } })
 const users = [];
 
 io.on('connection', (socket) => {

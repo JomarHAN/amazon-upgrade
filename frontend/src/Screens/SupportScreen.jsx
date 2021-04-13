@@ -31,50 +31,85 @@ function SupportScreen() {
       if (!socket) {
         const sk = socketIOClient(ENDPOINT);
         setSocket(sk);
-      }
-      socket.emit("onLogin", {
-        _id: userInfo._id,
-        name: userInfo.name,
-        isAdmin: userInfo.isAdmin,
-      });
-      socket.on("message", (data) => {
-        if (allSelectedUser._id === data._id) {
-          allMessages = [...allMessages, data];
-        } else {
-          const existUser = allUsers.find((user) => user._id === data._id);
+        sk.emit("onLogin", {
+          _id: userInfo._id,
+          name: userInfo.name,
+          isAdmin: userInfo.isAdmin,
+        });
+        sk.on("message", (data) => {
+          if (allSelectedUser._id === data._id) {
+            allMessages = [...allMessages, data];
+          } else {
+            const existUser = allUsers.find((user) => user._id === data._id);
+            if (existUser) {
+              allUsers = allUsers.map((user) =>
+                user._id === existUser._id ? { ...user, unread: true } : user
+              );
+              setUsers(allUsers);
+            }
+          }
+          setMessages(allMessages);
+        });
+        sk.on("updateUser", (updateUser) => {
+          const existUser = allUsers.find(
+            (user) => user._id === updateUser._id
+          );
           if (existUser) {
             allUsers = allUsers.map((user) =>
-              user._id === existUser._id ? { ...user, unread: true } : user
+              user._id === existUser._id ? updateUser : user
             );
             setUsers(allUsers);
+          } else {
+            allUsers = [...allUsers, updateUser];
+            setUsers(allUsers);
           }
-        }
-        setMessages(allMessages);
-      });
-      socket.on("updateUser", (updateUser) => {
-        const existUser = allUsers.find((user) => user._id === updateUser._id);
-        if (existUser) {
-          allUsers = allUsers.map((user) =>
-            user._id === existUser._id ? updateUser : user
-          );
+        });
+        sk.on("listUsers", (updateUsers) => {
+          allUsers = updateUsers;
           setUsers(allUsers);
-        } else {
-          allUsers = [...allUsers, updateUser];
-          setUsers(allUsers);
-        }
-      });
-      socket.on("listUsers", (updateUsers) => {
-        allUsers = updateUsers;
-        setUsers(allUsers);
-      });
-      socket.on("selectUser", (user) => {
-        allMessages = user.messages;
-        setMessages(allMessages);
-      });
+        });
+        sk.on("selectUser", (user) => {
+          allMessages = user.messages;
+          setMessages(allMessages);
+        });
+      }
     }
   }, [messages, socket, users, userInfo]);
 
-  const selectUser = (user) => {};
+  const selectUser = (user) => {
+    allSelectedUser = user;
+    setSelectedUser(allSelectedUser);
+    const existUser = allUsers.find((x) => x._id === user._id);
+    if (existUser) {
+      allUsers = allUsers.map((x) =>
+        x._id === existUser._id ? { ...x, unread: false } : x
+      );
+      setUsers(allUsers);
+    }
+    socket.emit("onUserSelected", user);
+  };
+
+  const submitHandler = (e) => {
+    e.preventDefault();
+    if (!messageBody.trim()) {
+      alert("Error. Please type message.");
+    } else {
+      allMessages = [
+        ...allMessages,
+        { body: messageBody, name: userInfo.name },
+      ];
+      setMessages(allMessages);
+      setMessageBody("");
+      setTimeout(() => {
+        socket.emit("onMessage", {
+          body: messageBody,
+          name: userInfo.name,
+          isAdmin: userInfo.isAdmin,
+          _id: selectedUser._id,
+        });
+      }, 1000);
+    }
+  };
 
   return (
     <div className="row top full-container">
