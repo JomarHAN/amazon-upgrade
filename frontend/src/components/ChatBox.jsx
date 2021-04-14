@@ -34,7 +34,7 @@ function ChatBox({ userInfo }) {
         setMessages([...messages, { body: data.body, name: data.name }]);
       });
     }
-  }, [messages, socket, userInfo]);
+  }, [messages, socket, userInfo, isOpen]);
 
   const supportHandler = () => {
     setIsOpen(true);

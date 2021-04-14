@@ -55,7 +55,7 @@ const io = new Server(httpServer, { cors: { origin: '*' } })
 const users = []
 
 io.on('connection', (socket) => {
-    socket.on('disconnect', () => {
+    socket.on('desconnect', () => {
         const user = users.find(x => x.socketId === socket.id)
         if (user) {
             user.online = false;
