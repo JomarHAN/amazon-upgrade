@@ -33,6 +33,7 @@ import DraftPreviewScreen from "./Screens/DraftPreviewScreen";
 import DraftListScreen from "./Screens/DraftListScreen";
 import DashboardScreen from "./Screens/DashboardScreen";
 import SupportScreen from "./Screens/SupportScreen";
+import ChatBox from "./components/ChatBox";
 
 function App() {
   const { cartItems } = useSelector((state) => state.cart);
@@ -194,7 +195,10 @@ function App() {
           <AdminRoute path="/support" component={SupportScreen} exact />
           <Route path="/" component={HomeScreen} exact />
         </main>
-        <footer className="row center">All right reserved</footer>
+        <footer className="row center">
+          {userInfo && !userInfo.isAdmin && <ChatBox userInfo={userInfo} />}
+          <div>All right reserved</div>
+        </footer>
       </div>
     </Router>
   );
