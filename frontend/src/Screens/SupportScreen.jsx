@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import socketIOClient from "socket.io-client";
+import MessageBox from "../components/MessageBox";
 
 let allUsers = [];
 let allMessages = [];
@@ -78,10 +79,72 @@ function SupportScreen() {
     }
   }, [socket, userInfo]);
 
+  const selectUser = (user) => {};
+
+  const submitHandler = (e) => {
+    e.preventDefault();
+  };
+
   return (
     <div className="rơ top full-container">
-      <div className="col-1 support-users">users</div>
-      <div className="col-3 support-messages">messages</div>
+      <div className="col-1 support-users">
+        {users.filter((user) => user._id !== userInfo._id).length === 0 && (
+          <MessageBox>No User in Need</MessageBox>
+        )}
+        <ul>
+          {users
+            .filter((user) => user._id !== userInfo._id)
+            .map((user) => (
+              <li
+                key={user._id}
+                className={user._id === selectedUser._id ? "selected" : ""}
+              >
+                <button
+                  className="block"
+                  type="button"
+                  onClick={() => selectUser(user)}
+                >
+                  {user.name}
+                </button>
+                <span
+                  className={
+                    user.unread ? "unread" : user.online ? "online" : "offline"
+                  }
+                />
+              </li>
+            ))}
+        </ul>
+      </div>
+      <div className="col-3 support-messages">
+        {!selectedUser._id ? (
+          <MessageBox>Select an user to chat</MessageBox>
+        ) : (
+          <div>
+            <div className="row">
+              <strong>Chat with {selectedUser.name}</strong>
+            </div>
+            <ul ref={uiMessageRef}>
+              {messages.length === 0 && <li>No message</li>}
+              {messages.map((msg, idx) => (
+                <li key={idx}>
+                  <strong>{`${msg.name}: `}</strong> {msg.body}
+                </li>
+              ))}
+            </ul>
+            <div>
+              <form onSubmit={submitHandler} className="row">
+                <input
+                  type="text"
+                  placeholder="Enter message"
+                  value={messageBody}
+                  onChange={(e) => setMessageBody(e.target.value)}
+                />
+                <button type="submit">Send</button>
+              </form>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
