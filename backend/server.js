@@ -51,7 +51,7 @@ app.use((err, req, res, next) => {
 })
 
 const httpServer = http.Server(app)
-const io = new Server(httpServer)
+const io = new Server(httpServer, { cors: { origin: '*' } })
 const users = []
 
 io.on('connection', (socket) => {
