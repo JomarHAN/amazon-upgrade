@@ -79,10 +79,39 @@ function SupportScreen() {
     }
   }, [socket, userInfo]);
 
-  const selectUser = (user) => {};
+  const selectUser = (user) => {
+    allSelectedUser = user;
+    setSelectedUser(allSelectedUser);
+    const existUser = allUsers.map((x) => x._id === user._id);
+    if (existUser) {
+      allUsers.map((x) =>
+        x._id === existUser._id ? { ...x, unread: false } : x
+      );
+      setUsers(allUsers);
+    }
+    socket.emit("onUserSelected", user);
+  };
 
   const submitHandler = (e) => {
     e.preventDefault();
+    if (!messageBody.trim()) {
+      alert("Error.Please enter message");
+    } else {
+      allMessages = [
+        ...allMessages,
+        { body: messageBody, name: userInfo.name },
+      ];
+      setMessages(allMessages);
+      setMessageBody("");
+      setTimeout(() => {
+        socket.emit("onMessage", {
+          body: messageBody,
+          name: userInfo.name,
+          isAdmin: userInfo.isAdmin,
+          _id: selectedUser._id,
+        });
+      }, 1000);
+    }
   };
 
   return (
