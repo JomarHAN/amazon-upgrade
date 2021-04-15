@@ -8,8 +8,9 @@ import productRouter from './routers/productRouters.js'
 import path from 'path'
 import uploadRouter from './routers/uploadRouter.js'
 import draftRouter from './routers/draftRouter.js'
-import { Server } from 'socket.io'
+
 import http from 'http'
+import { Server } from 'socket.io'
 
 const app = express()
 app.use(express.json())
@@ -56,11 +57,11 @@ const users = []
 
 io.on('connection', (socket) => {
     socket.on('disconnect', () => {
-        const user = users.find(x => x.socketId === socket.id)
+        const user = users.find(user => user.socketId === socket.id)
         if (user) {
             user.online = false;
             console.log('Offline', user.name)
-            const admin = users.find(x => x.isAdmin && x.online)
+            const admin = users.find(user => user.isAdmin && user.online)
             if (admin) {
                 io.to(admin.socketId).emit('updateUser', user)
             }
@@ -77,7 +78,9 @@ io.on('connection', (socket) => {
         const existUser = users.find(x => x._id === updateUser._id)
         if (existUser) {
             existUser.online = true;
-            existUser.socketId = socket.id
+            existUser.socketId = socket.id;
+        } else {
+            users.push(updateUser)
         }
         console.log('Online', user.name)
         const admin = users.find(x => x.isAdmin && x.online)
@@ -89,7 +92,8 @@ io.on('connection', (socket) => {
         }
     })
 
-    socket.on('onSelectUser', (user) => {
+
+    socket.on('onSelectedUser', (user) => {
         const admin = users.find(x => x.isAdmin && x.online)
         if (admin) {
             const existUser = users.find(x => x._id === user._id)
@@ -99,10 +103,11 @@ io.on('connection', (socket) => {
 
     socket.on('onMessage', (message) => {
         if (message.isAdmin) {
-            const user = users.find(x => x._id === message._id)
+
+            const user = users.find(x => x._id === message._d && x.online)
             if (user) {
-                user.messages.push(message)
                 io.to(user.socketId).emit('message', message)
+                user.messages.push(message)
             }
         } else {
             const admin = users.find(x => x.isAdmin && x.online)
@@ -114,6 +119,7 @@ io.on('connection', (socket) => {
                 io.to(socket.id).emit('message', {
                     name: 'Admin',
                     body: "Sorry, I am not available now!"
+
                 })
             }
         }
