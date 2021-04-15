@@ -28,57 +28,54 @@ function SupportScreen() {
         left: 0,
         behavior: "smooth",
       });
-      if (!socket) {
-        const sk = socketIOClient(ENDPOINT);
-        setSocket(sk);
+    }
+    if (!socket) {
+      const sk = socketIOClient(ENDPOINT);
+      setSocket(sk);
 
-        sk.emit("onLogin", {
-          _id: userInfo._id,
-          name: userInfo.name,
-          isAdmin: userInfo.isAdmin,
-        });
+      sk.emit("onLogin", {
+        _id: userInfo._id,
+        name: userInfo.name,
+        isAdmin: userInfo.isAdmin,
+      });
 
-        sk.on("message", (data) => {
-          if (allSelectedUser._id === data._id) {
-            allMessages = [...allMessages, data];
-          } else {
-            const existUser = allUsers.find((user) => user._id === data._id);
-            if (existUser) {
-              allUsers = allUsers.map((user) =>
-                user._id === existUser._id ? { ...user, unread: true } : user
-              );
-              setUsers(allUsers);
-            }
-          }
-          setMessages(allMessages);
-        });
-
-        sk.on("updateUser", (updateUser) => {
-          const existUser = allUsers.find(
-            (user) => user._id === updateUser._id
-          );
+      sk.on("message", (data) => {
+        if (allSelectedUser._id === data._id) {
+          allMessages = [...allMessages, data];
+        } else {
+          const existUser = allUsers.find((user) => user._id === data._id);
           if (existUser) {
-            allUsers.map((user) =>
-              user._id === existUser._id ? updateUser : user
+            allUsers = allUsers.map((user) =>
+              user._id === existUser._id ? { ...user, unread: true } : user
             );
             setUsers(allUsers);
-          } else {
-            allUsers = [...allUsers, updateUser];
-            setUsers(allUsers);
           }
-        });
+        }
+        setMessages(allMessages);
+      });
 
-        sk.on("listUsers", (updateUsers) => {
-          allUsers = updateUsers;
-          console.log(updateUsers);
+      sk.on("updateUser", (updateUser) => {
+        const existUser = allUsers.find((user) => user._id === updateUser._id);
+        if (existUser) {
+          allUsers.map((user) =>
+            user._id === existUser._id ? updateUser : user
+          );
           setUsers(allUsers);
-        });
+        } else {
+          allUsers = [...allUsers, updateUser];
+          setUsers(allUsers);
+        }
+      });
 
-        sk.on("selectUser", (user) => {
-          allMessages = user.messages;
-          setMessages(allMessages);
-        });
-      }
+      sk.on("listUsers", (updateUsers) => {
+        allUsers = updateUsers;
+        setUsers(allUsers);
+      });
+
+      sk.on("selectUser", (user) => {
+        allMessages = user.messages;
+        setMessages(allMessages);
+      });
     }
   }, [socket, userInfo, messages, users]);
 

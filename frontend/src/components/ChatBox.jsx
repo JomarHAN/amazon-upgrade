@@ -6,7 +6,8 @@ const ENDPOINT =
     ? "http://127.0.0.1:5000"
     : window.location.host;
 
-function ChatBox({ userInfo }) {
+function ChatBox(props) {
+  const { userInfo } = props;
   const [isOpen, setIsOpen] = useState(false);
   const uiMessagesRef = useRef();
   const [messageBody, setMessageBody] = useState("");

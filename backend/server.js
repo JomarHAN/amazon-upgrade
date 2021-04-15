@@ -55,12 +55,12 @@ const io = new Server(httpServer, { cors: { origin: '*' } })
 const users = []
 
 io.on('connection', (socket) => {
-    socket.on('desconnect', () => {
-        const user = users.find(x => x.socketId === socket.id)
+    socket.on('disconnect', () => {
+        const user = users.find((x) => x.socketId === socket.id)
         if (user) {
             user.online = false;
             console.log('Offline', user.name)
-            const admin = users.find(x => x.isAdmin && x.online)
+            const admin = users.find((x) => x.isAdmin && x.online)
             if (admin) {
                 io.to(admin.socketId).emit('updateUser', user)
             }
@@ -74,7 +74,7 @@ io.on('connection', (socket) => {
             socketId: socket.id,
             messages: []
         }
-        const existUser = users.find(x => x._id === updateUser._id)
+        const existUser = users.find((x) => x._id === updateUser._id)
         if (existUser) {
             existUser.socketId = socket.id;
             existUser.online = true
@@ -82,7 +82,7 @@ io.on('connection', (socket) => {
             users.push(updateUser)
         }
         console.log('Online', user.name)
-        const admin = users.find(x => x.isAdmin && x.online)
+        const admin = users.find((x) => x.isAdmin && x.online)
         if (admin) {
             io.to(admin.socketId).emit('updateUser', updateUser)
         }
@@ -92,25 +92,25 @@ io.on('connection', (socket) => {
     })
 
     socket.on('onUserSelected', (user) => {
-        const admin = users.find(x => x.isAdmin && x.online)
+        const admin = users.find((x) => x.isAdmin && x.online)
         if (admin) {
-            const existUser = users.find(x => x._id === user._id)
+            const existUser = users.find((x) => x._id === user._id)
             io.to(admin.socketId).emit('selectUser', existUser)
         }
     })
 
     socket.on('onMessage', (message) => {
         if (message.isAdmin) {
-            const user = users.find(x => x._id === message._id && x.online)
+            const user = users.find((x) => x._id === message._id && x.online)
             if (user) {
                 io.to(user.socketId).emit('message', message)
                 user.messages.push(message)
             }
         } else {
-            const admin = users.find(x => x.isAdmin && x.online)
+            const admin = users.find((x) => x.isAdmin && x.online)
             if (admin) {
                 io.to(admin.socketId).emit('message', message)
-                const user = users.find(x => x._id === message._id && x.online)
+                const user = users.find((x) => x._id === message._id && x.online)
                 user.messages.push(message)
             } else {
                 io.to(socket.id).emit('message', {
