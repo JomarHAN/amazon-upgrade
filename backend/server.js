@@ -92,7 +92,6 @@ io.on('connection', (socket) => {
         }
     })
 
-
     socket.on('onSelectedUser', (user) => {
         const admin = users.find(x => x.isAdmin && x.online)
         if (admin) {
@@ -103,7 +102,6 @@ io.on('connection', (socket) => {
 
     socket.on('onMessage', (message) => {
         if (message.isAdmin) {
-
             const user = users.find(x => x._id === message._d && x.online)
             if (user) {
                 io.to(user.socketId).emit('message', message)
