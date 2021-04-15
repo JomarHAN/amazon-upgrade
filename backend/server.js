@@ -88,6 +88,36 @@ io.on('connection', (socket) => {
             io.to(updateUser.socketId).emit('listUsers', users)
         }
     })
+
+    socket.on('onSelectUser', (user) => {
+        const admin = users.find(x => x.isAdmin && x.online)
+        if (admin) {
+            const existUser = users.find(x => x._id === user._id)
+            io.to(admin.socketId).emit('selectedUser', existUser)
+        }
+    })
+
+    socket.on('onMessage', (message) => {
+        if (message.isAdmin) {
+            const user = users.find(x => x._id === message._id)
+            if (user) {
+                user.messages.push(message)
+                io.to(user.socketId).emit('message', message)
+            }
+        } else {
+            const admin = users.find(x => x.isAdmin && x.online)
+            if (admin) {
+                const existUser = users.find(x => x._id === message._id && x.online)
+                existUser.messages.push(message)
+                io.to(admin.socketId).emit('message', message)
+            } else {
+                io.to(socket.id).emit('message', {
+                    name: 'Admin',
+                    body: "Sorry, I am not available now!"
+                })
+            }
+        }
+    })
 })
 
 const port = process.env.PORT || 5000;
