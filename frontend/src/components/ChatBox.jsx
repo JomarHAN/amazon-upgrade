@@ -13,7 +13,11 @@ function ChatBox(props) {
   const [isOpen, setIsOpen] = useState(false);
   const [msgBody, setMsgBody] = useState("");
   const [messages, setMessages] = useState([
-    { name: "Admin", body: "Hello there, please ask your question." },
+    {
+      name: "Admin",
+      body: "Hello there, please ask your question.",
+      isAdmin: true,
+    },
   ]);
 
   useEffect(() => {
