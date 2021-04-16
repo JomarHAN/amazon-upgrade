@@ -102,7 +102,7 @@ io.on('connection', (socket) => {
 
     socket.on('onMessage', (message) => {
         if (message.isAdmin) {
-            const user = users.find(x => x._id === message._d && x.online)
+            const user = users.find(x => x._id === message._id && x.online)
             if (user) {
                 io.to(user.socketId).emit('message', message)
                 user.messages.push(message)
