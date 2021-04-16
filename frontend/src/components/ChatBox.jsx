@@ -29,10 +29,15 @@ function ChatBox({ userInfo }) {
       });
 
       socket.on("message", (message) => {
-        setMessages([...messages, { body: message.body, name: message.name }]);
+        setMessages([
+          ...messages,
+          { body: message.body, name: message.name, isAdmin: message.isAdmin },
+        ]);
       });
     }
   }, [socket, userInfo, messages, isOpen]);
+
+  console.log(messages);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -74,8 +79,10 @@ function ChatBox({ userInfo }) {
           </div>
           <ul ref={refMessage}>
             {messages.map((msg, idx) => (
-              <li key={idx}>
-                <strong>{`${msg.name}: `}</strong> {msg.body}
+              <li key={idx} className={msg.isAdmin ? "admin" : ""}>
+                <div className="chat-bubble">
+                  <strong>{`${msg.name}: `}</strong> {msg.body}
+                </div>
               </li>
             ))}
           </ul>

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import MessageBox from "../components/MessageBox";
-import socketIOClient, { io } from "socket.io-client";
+import socketIOClient from "socket.io-client";
 
 const ENDPOINT =
   window.location.host.indexOf("localhost") >= 0
@@ -16,15 +16,15 @@ function SupportScreen() {
   const { userInfo } = useSelector((state) => state.userSignin);
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
-  const refMessage = useRef(null);
+  const refMessageAdmin = useRef(null);
   const [messages, setMessages] = useState([]);
   const [msgBody, setMsgBody] = useState("");
   const [socket, setSocket] = useState(null);
 
   useEffect(() => {
-    if (refMessage.current) {
-      refMessage.current.scrollBy({
-        top: refMessage.current.clientHeight,
+    if (refMessageAdmin.current) {
+      refMessageAdmin.current.scrollBy({
+        top: refMessageAdmin.current.clientHeight,
         left: 0,
         behavior: "smooth",
       });
@@ -41,7 +41,7 @@ function SupportScreen() {
       });
 
       sk.on("updateUser", (updateUser) => {
-        const existUser = users.find((x) => x._id === updateUser._id);
+        const existUser = allUsers.find((x) => x._id === updateUser._id);
         if (existUser) {
           allUsers.map((user) =>
             user._id === existUser._id ? updateUser : user
@@ -85,8 +85,8 @@ function SupportScreen() {
     setSelectedUser(allUserSelected);
     const existUser = allUsers.find((x) => x._id === user._id);
     if (existUser) {
-      allUsers.map((user) =>
-        user._id === existUser._id ? { ...user, unread: false } : user
+      allUsers.map((x) =>
+        x._id === existUser._id ? { ...x, unread: false } : x
       );
       setUsers(allUsers);
     }
@@ -100,6 +100,8 @@ function SupportScreen() {
       {
         body: msgBody,
         name: userInfo.name,
+        isAdmin: userInfo.isAdmin,
+        _id: selectedUser._id,
       },
     ];
     setMessages(allMessages);
@@ -113,7 +115,6 @@ function SupportScreen() {
       });
     }, 1000);
   };
-
   return (
     <div className="row top full-container">
       <div className="col-1 support-users">
@@ -152,12 +153,14 @@ function SupportScreen() {
             <div className="row">
               <strong>Chat with {selectedUser.name}</strong>
             </div>
-            <ul ref={refMessage}>
+            <ul ref={refMessageAdmin}>
               {messages.length === 0 && <MessageBox>No Message</MessageBox>}
               {messages.map((msg, idx) => (
-                <li key={idx}>
-                  <strong>{`${msg.name}: `}</strong>
-                  {msg.body}
+                <li key={idx} className={msg.isAdmin ? "admin" : ""}>
+                  <div className="chat-bubble">
+                    <strong>{`${msg.name}: `}</strong>
+                    {msg.body}
+                  </div>
                 </li>
               ))}
             </ul>
@@ -169,11 +172,7 @@ function SupportScreen() {
                   value={msgBody}
                   onChange={(e) => setMsgBody(e.target.value)}
                 />
-                <button
-                  className="block"
-                  type="submit"
-                  disabled={msgBody === "" ? true : false}
-                >
+                <button type="submit" disabled={msgBody === "" ? true : false}>
                   Send
                 </button>
               </form>
