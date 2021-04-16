@@ -198,7 +198,7 @@ function App() {
           <Route path="/" component={HomeScreen} exact />
         </main>
         <footer className="row center">
-          {userInfo && !userInfo.isAdmin && <ChatBox userInfo={userInfo} />}
+          {!userInfo?.isAdmin && <ChatBox userInfo={userInfo} />}
           <div>All right reserved</div>
         </footer>
       </div>

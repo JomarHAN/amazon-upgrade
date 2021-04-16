@@ -12,19 +12,18 @@ const ENDPOINT =
     : window.location.host;
 
 function SupportScreen() {
-  const [selectedUser, setSelectedUser] = useState({});
-  const [socket, setSocket] = useState(null);
-  const uiMessagesRef = useRef(null);
-  const [messageBody, setMessageBody] = useState("");
-  const [messages, setMessages] = useState([]);
+  const { userInfo } = useSelector((state) => state.userSignin);
   const [users, setUsers] = useState([]);
-  const userSignin = useSelector((state) => state.userSignin);
-  const { userInfo } = userSignin;
+  const [selectedUser, setSelectedUser] = useState(null);
+  const refMessageAdmin = useRef(null);
+  const [messages, setMessages] = useState([]);
+  const [msgBody, setMsgBody] = useState("");
+  const [socket, setSocket] = useState(null);
 
   useEffect(() => {
-    if (uiMessagesRef.current) {
-      uiMessagesRef.current.scrollBy({
-        top: uiMessagesRef.current.clientHeight,
+    if (refMessageAdmin.current) {
+      refMessageAdmin.current.scrollBy({
+        top: refMessageAdmin.current.clientHeight,
         left: 0,
         behavior: "smooth",
       });
@@ -37,6 +36,20 @@ function SupportScreen() {
         name: userInfo.name,
         isAdmin: userInfo.isAdmin,
       });
+
+      sk.on("updateUser", (updateUser) => {
+        const existUser = allUsers.find((x) => x._id === updateUser._id);
+        if (existUser) {
+          allUsers.map((user) =>
+            user._id === existUser._id ? updateUser : user
+          );
+          setUsers(allUsers);
+        } else {
+          allUsers = [...allUsers, updateUser];
+          setUsers(allUsers);
+        }
+      });
+
       sk.on("message", (data) => {
         if (allSelectedUser._id === data._id) {
           allMessages = [...allMessages, data];
@@ -79,7 +92,7 @@ function SupportScreen() {
     setSelectedUser(allSelectedUser);
     const existUser = allUsers.find((x) => x._id === user._id);
     if (existUser) {
-      allUsers = allUsers.map((x) =>
+      allUsers.map((x) =>
         x._id === existUser._id ? { ...x, unread: false } : x
       );
       setUsers(allUsers);
@@ -89,26 +102,26 @@ function SupportScreen() {
 
   const submitHandler = (e) => {
     e.preventDefault();
-    if (!messageBody.trim()) {
-      alert("Error. Please type message.");
-    } else {
-      allMessages = [
-        ...allMessages,
-        { body: messageBody, name: userInfo.name },
-      ];
-      setMessages(allMessages);
-      setMessageBody("");
-      setTimeout(() => {
-        socket.emit("onMessage", {
-          body: messageBody,
-          name: userInfo.name,
-          isAdmin: userInfo.isAdmin,
-          _id: selectedUser._id,
-        });
-      }, 1000);
-    }
+    allMessages = [
+      ...allMessages,
+      {
+        body: msgBody,
+        name: userInfo.name,
+        isAdmin: userInfo.isAdmin,
+        _id: selectedUser._id,
+      },
+    ];
+    setMessages(allMessages);
+    setMsgBody("");
+    setTimeout(() => {
+      socket.emit("onMessage", {
+        body: msgBody,
+        name: userInfo.name,
+        isAdmin: userInfo.isAdmin,
+        _id: selectedUser._id,
+      });
+    }, 1000);
   };
-
   return (
     <div className="row top full-container">
       <div className="col-1 support-users">
@@ -121,7 +134,7 @@ function SupportScreen() {
             .map((user) => (
               <li
                 key={user._id}
-                className={user._id === selectedUser._id ? "selected" : ""}
+                className={user._id === selectedUser?._id ? "selected" : ""}
               >
                 <button
                   className="block"
@@ -140,18 +153,21 @@ function SupportScreen() {
         </ul>
       </div>
       <div className="col-3 support-messages">
-        {!selectedUser._id ? (
+        {!selectedUser?._id ? (
           <MessageBox>Select a user to start chat</MessageBox>
         ) : (
           <div>
             <div className="row">
               <strong>Chat with {selectedUser.name}</strong>
             </div>
-            <ul ref={uiMessagesRef}>
-              {messages.length === 0 && <li>No message.</li>}
-              {messages.map((msg, index) => (
-                <li key={index}>
-                  <strong>{`${msg.name}: `}</strong> {msg.body}
+            <ul ref={refMessageAdmin}>
+              {messages.length === 0 && <MessageBox>No Message</MessageBox>}
+              {messages.map((msg, idx) => (
+                <li key={idx} className={msg.isAdmin ? "admin" : ""}>
+                  <div className="chat-bubble">
+                    <strong>{`${msg.name}: `}</strong>
+                    {msg.body}
+                  </div>
                 </li>
               ))}
             </ul>
@@ -160,10 +176,12 @@ function SupportScreen() {
                 <input
                   type="text"
                   placeholder="type message"
-                  value={messageBody}
-                  onChange={(e) => setMessageBody(e.target.value)}
+                  value={msgBody}
+                  onChange={(e) => setMsgBody(e.target.value)}
                 />
-                <button type="submit">Send</button>
+                <button type="submit" disabled={msgBody === "" ? true : false}>
+                  Send
+                </button>
               </form>
             </div>
           </div>

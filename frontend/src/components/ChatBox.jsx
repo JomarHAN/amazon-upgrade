@@ -11,7 +11,7 @@ function ChatBox(props) {
   const [socket, setSocket] = useState(null);
   const uiMessagesRef = useRef(null);
   const [isOpen, setIsOpen] = useState(false);
-  const [messageBody, setMessageBody] = useState("");
+  const [msgBody, setMsgBody] = useState("");
   const [messages, setMessages] = useState([
     { name: "Admin", body: "Hello there, please ask your question." },
   ]);
@@ -30,11 +30,15 @@ function ChatBox(props) {
         name: userInfo.name,
         isAdmin: userInfo.isAdmin,
       });
-      socket.on("message", (data) => {
-        setMessages([...messages, { body: data.body, name: data.name }]);
+
+      socket.on("message", (message) => {
+        setMessages([
+          ...messages,
+          { body: message.body, name: message.name, isAdmin: message.isAdmin },
+        ]);
       });
     }
-  }, [messages, isOpen, socket, userInfo]);
+  }, [socket, userInfo, messages, isOpen]);
 
   const supportHandler = () => {
     setIsOpen(true);
@@ -44,14 +48,14 @@ function ChatBox(props) {
 
   const submitHandler = (e) => {
     e.preventDefault();
-    if (!messageBody.trim()) {
+    if (!msgBody.trim()) {
       alert("Error. Please type message.");
     } else {
-      setMessages([...messages, { body: messageBody, name: userInfo.name }]);
-      setMessageBody("");
+      setMessages([...messages, { body: msgBody, name: userInfo.name }]);
+      setMsgBody("");
       setTimeout(() => {
         socket.emit("onMessage", {
-          body: messageBody,
+          body: msgBody,
           name: userInfo.name,
           isAdmin: userInfo.isAdmin,
           _id: userInfo._id,
@@ -79,9 +83,11 @@ function ChatBox(props) {
             </button>
           </div>
           <ul ref={uiMessagesRef}>
-            {messages.map((msg, index) => (
-              <li key={index}>
-                <strong>{`${msg.name}: `}</strong> {msg.body}
+            {messages.map((msg, idx) => (
+              <li key={idx} className={msg.isAdmin ? "admin" : ""}>
+                <div className="chat-bubble">
+                  <strong>{`${msg.name}: `}</strong> {msg.body}
+                </div>
               </li>
             ))}
           </ul>
@@ -89,9 +95,9 @@ function ChatBox(props) {
             <form onSubmit={submitHandler} className="row">
               <input
                 type="text"
-                value={messageBody}
+                value={msgBody}
                 placeholder="type message"
-                onChange={(e) => setMessageBody(e.target.value)}
+                onChange={(e) => setMsgBody(e.target.value)}
               />
               <button type="submit">Send</button>
             </form>
